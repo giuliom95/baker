@@ -34,10 +34,10 @@ int main(int argc, char* argv[]) {
 	embree_vtx_buf[9] = 1.0f; embree_vtx_buf[10] = 1.0f; embree_vtx_buf[11] = 0.0f;
 	embree_vtx_buf[12] = 0.5f; embree_vtx_buf[13] = 0.5f; embree_vtx_buf[14] = 0.0f;
 
-	int* embree_idx_buf	= (int*) rtcSetNewGeometryBuffer(	embree_tri, 
+	unsigned* embree_idx_buf	= (unsigned*) rtcSetNewGeometryBuffer(	embree_tri, 
 															RTC_BUFFER_TYPE_INDEX, 
 															0, RTC_FORMAT_UINT3,
-															3*sizeof(int), 4);
+															3*sizeof(unsigned), 4);
 	embree_idx_buf[0] = 0;  embree_idx_buf[1] = 1;  embree_idx_buf[2] = 4;
 	embree_idx_buf[3] = 1;  embree_idx_buf[4] = 3;  embree_idx_buf[5] = 4;
 	embree_idx_buf[6] = 4;  embree_idx_buf[7] = 3;  embree_idx_buf[8] = 2;
