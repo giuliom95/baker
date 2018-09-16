@@ -27,12 +27,12 @@ int main(int argc, char* argv[]) {
 	float* embree_vtx_buf	 	= (float*) rtcSetNewGeometryBuffer(	embree_tri, 
 																	RTC_BUFFER_TYPE_VERTEX, 
 																	0, RTC_FORMAT_FLOAT3,
-																	4*sizeof(float), 5);
-	 embree_vtx_buf[0] = 0.0f;  embree_vtx_buf[1] = 0.0f;  embree_vtx_buf[2] = 0.0f;
-	 embree_vtx_buf[4] = 1.0f;  embree_vtx_buf[5] = 0.0f;  embree_vtx_buf[6] = 0.0f;
-	 embree_vtx_buf[8] = 0.0f;  embree_vtx_buf[9] = 1.0f; embree_vtx_buf[10] = 0.0f;
-	embree_vtx_buf[12] = 1.0f; embree_vtx_buf[13] = 1.0f; embree_vtx_buf[14] = 0.0f;
-	embree_vtx_buf[16] = 0.5f; embree_vtx_buf[17] = 0.5f; embree_vtx_buf[18] = 0.0f;
+																	3*sizeof(float), 5);
+	embree_vtx_buf[0] = 0.0f;  embree_vtx_buf[1] = 0.0f;  embree_vtx_buf[2] = 0.0f;
+	embree_vtx_buf[3] = 1.0f;  embree_vtx_buf[4] = 0.0f;  embree_vtx_buf[5] = 0.0f;
+	embree_vtx_buf[6] = 0.0f;  embree_vtx_buf[7] = 1.0f; embree_vtx_buf[8] = 0.0f;
+	embree_vtx_buf[9] = 1.0f; embree_vtx_buf[10] = 1.0f; embree_vtx_buf[11] = 0.0f;
+	embree_vtx_buf[12] = 0.5f; embree_vtx_buf[13] = 0.5f; embree_vtx_buf[14] = 0.0f;
 
 	int* embree_idx_buf	= (int*) rtcSetNewGeometryBuffer(	embree_tri, 
 															RTC_BUFFER_TYPE_INDEX, 
