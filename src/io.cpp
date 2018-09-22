@@ -2,7 +2,7 @@
 #include "io.hpp"
 
 namespace io {
-	const void saveEXR (const std::string& path, 
+	const void save_exr (const std::string& path, 
 						const int w, const int h, 
 						const std::vector<Vec4h>& image) {
 
