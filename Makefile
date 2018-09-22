@@ -3,9 +3,9 @@ CXX=g++
 CXXFLAGS=-std=c++11 -O3 -Wall -Wno-deprecated -msse3
 TARGET=bin/baker
 
-INCLUDES=
+INCLUDES=-I/usr/include/OpenEXR
 
-LDFLAGS=-pthread -lembree3
+LDFLAGS=-pthread -lembree3 -lIlmImf -lHalf
 
 # globs
 SRCS := $(wildcard src/*.cpp)
