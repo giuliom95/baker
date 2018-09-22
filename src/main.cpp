@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include <stdint.h>
+#include "io.hpp"
 
 int main(int argc, char* argv[]) {
 	// Activation of "Flush to Zero" and "Denormals are Zero" CPU modes.
@@ -22,31 +22,7 @@ int main(int argc, char* argv[]) {
 	const auto embree_scene		= rtcNewScene(embree_device);
 
 	/** Start building scene **/
-	const auto embree_tri		= rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-	float* embree_vtx_buf	 	= (float*) rtcSetNewGeometryBuffer(	embree_tri, 
-																	RTC_BUFFER_TYPE_VERTEX, 
-																	0, RTC_FORMAT_FLOAT3,
-																	3*sizeof(float), 5);
-	embree_vtx_buf[0] = 0.0f;  embree_vtx_buf[1] = 0.0f;  embree_vtx_buf[2] = 0.0f;
-	embree_vtx_buf[3] = 1.0f;  embree_vtx_buf[4] = 0.0f;  embree_vtx_buf[5] = 0.0f;
-	embree_vtx_buf[6] = 0.0f;  embree_vtx_buf[7] = 1.0f; embree_vtx_buf[8] = 0.0f;
-	embree_vtx_buf[9] = 1.0f; embree_vtx_buf[10] = 1.0f; embree_vtx_buf[11] = 0.0f;
-	embree_vtx_buf[12] = 0.5f; embree_vtx_buf[13] = 0.5f; embree_vtx_buf[14] = 0.0f;
-
-	unsigned* embree_idx_buf	= (unsigned*) rtcSetNewGeometryBuffer(	embree_tri, 
-															RTC_BUFFER_TYPE_INDEX, 
-															0, RTC_FORMAT_UINT3,
-															3*sizeof(unsigned), 4);
-	embree_idx_buf[0] = 0;  embree_idx_buf[1] = 1;  embree_idx_buf[2] = 4;
-	embree_idx_buf[3] = 1;  embree_idx_buf[4] = 3;  embree_idx_buf[5] = 4;
-	embree_idx_buf[6] = 4;  embree_idx_buf[7] = 3;  embree_idx_buf[8] = 2;
-	embree_idx_buf[9] = 0; embree_idx_buf[10] = 4; embree_idx_buf[11] = 2;
-
-
-	rtcCommitGeometry(embree_tri);
-	const auto geom_id = rtcAttachGeometry(embree_scene, embree_tri);
-	rtcReleaseGeometry(embree_tri);
+	const auto geom_id = io::load_model("in/plane.obj", embree_device, embree_scene, true);
 
 	rtcCommitScene(embree_scene);
 	/** End building scene **/
