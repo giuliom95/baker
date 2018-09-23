@@ -20,6 +20,17 @@ using Vec3i = std::array<int, 3>;
 using Vec3f = std::array<float, 3>; 
 using Vec4h = std::array<half, 4>;
 
+inline const Vec2f operator*	(const float f,  const Vec2f& v) { return {f*v[0], f*v[1]}; }
+inline const Vec2f operator+	(const Vec2f& a, const Vec2f& b) { return {a[0]+b[0], a[1]+b[1]}; }
+
+inline std::ostream& operator<<(std::ostream& os, const Vec2f& v) {
+	return os << "[" << v[0] << ", " << v[1] << "]";
+}
+
+inline std::ostream& operator<<(std::ostream& os, Vec2f& v) {
+	return os << "[" << v[0] << ", " << v[1] << "]";
+}
+
 inline const float dot			(const Vec3f& a, const Vec3f& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
 inline const Vec3f cross		(const Vec3f& a, const Vec3f& b) { return {a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]}; }
 inline const Vec3f operator-	(const Vec3f& a, const Vec3f& b) { return {a[0]-b[0], a[1]-b[1], a[2]-b[2]}; }
