@@ -10,10 +10,7 @@ namespace io {
 		file.writePixels(h);
 	}
 
-	const int load_model(	const std::string& path,
-							const RTCDevice& embree_device,
-							const RTCScene& embree_scene,
-							bool load_uvmap) {
+	const Model load_obj(const std::string& path) {
 		std::ifstream input{path};
 		if(!input) {
 			std::cerr << "ERROR: Impossible to open \"" << path << "\"!" << std::endl;
@@ -66,29 +63,7 @@ namespace io {
 			}
 		}
 
-		const auto embree_geom = rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-		const auto vtx_num = vtxs.size();
-		Vec3f* embree_vtx_buf = (Vec3f*) rtcSetNewGeometryBuffer(	embree_geom, 
-																	RTC_BUFFER_TYPE_VERTEX, 
-																	0, RTC_FORMAT_FLOAT3,
-																	sizeof(Vec3f), vtxs.size());
-		for(auto i = 0; i < vtx_num; ++i)
-			embree_vtx_buf[i] = vtxs[i];
-
-		const auto vtris_num = vtris.size();
-		Vec3i* embree_idx_buf	= (Vec3i*) rtcSetNewGeometryBuffer(	embree_geom, 
-																RTC_BUFFER_TYPE_INDEX, 
-																0, RTC_FORMAT_UINT3,
-																sizeof(Vec3i), vtris_num);
-		for(auto i = 0; i < vtris_num; ++i)
-			embree_idx_buf[i] = vtris[i];
-
-
-		rtcCommitGeometry(embree_geom);
-		const auto geom_id = rtcAttachGeometry(embree_scene, embree_geom);
-		rtcReleaseGeometry(embree_geom);
-
-		return geom_id;
+		return {vtxs, norms, uvs, vtris, ntris, uvtris};
 	}
+
 }

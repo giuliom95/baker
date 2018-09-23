@@ -22,7 +22,14 @@ int main(int argc, char* argv[]) {
 	const auto embree_scene		= rtcNewScene(embree_device);
 
 	/** Start building scene **/
-	const auto geom_id = io::load_model("in/plane.obj", embree_device, embree_scene, true);
+	const auto model = io::load_obj("in/plane.obj");
+
+	const auto embree_geom = rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_TRIANGLE);
+	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, model.vtxs.data(), 0, sizeof(Vec3f), model.vtxs.size());
+	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, model.vtris.data(), 0, sizeof(Vec3i), model.vtris.size());
+	rtcCommitGeometry(embree_geom);
+	const auto geom_id = rtcAttachGeometry(embree_scene, embree_geom);
+	rtcReleaseGeometry(embree_geom);
 
 	rtcCommitScene(embree_scene);
 	/** End building scene **/
@@ -46,7 +53,8 @@ int main(int argc, char* argv[]) {
 			std::cout << (signed) ray_hit.hit.geomID << " -- ";
 			std::cout << (signed) ray_hit.ray.tfar << std::endl;
 			if(ray_hit.hit.geomID == geom_id) {
-				std::cout << "## " << ray_hit.hit.primID << ": ";
+				const auto tri_id = ray_hit.hit.primID;
+				std::cout << "## " << tri_id << ": ";
 				std::cout << ray_hit.hit.u << " ";
 				std::cout << ray_hit.hit.v << std::endl;
 			}
