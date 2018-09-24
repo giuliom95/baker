@@ -10,7 +10,7 @@ namespace io {
 		file.writePixels(h);
 	}
 
-	const Model load_obj(const std::string& path) {
+	const Model load_obj(const std::string& path, const bool load_uv) {
 		std::ifstream input{path};
 		if(!input) {
 			std::cerr << "ERROR: Impossible to open \"" << path << "\"!" << std::endl;
@@ -54,12 +54,12 @@ namespace io {
 
 					elem = elem.substr(sep1+1, elem.length()-(sep1+1));
 					const auto sep2 = elem.find('/');
-					uvtri[i] = std::stoi(elem.substr(0, sep2)) - 1;
+					if(load_uv) uvtri[i] = std::stoi(elem.substr(0, sep2)) - 1;
 					ntri[i] = std::stoi(elem.substr(sep2+1, elem.length()-(sep2+1))) - 1;
 				}
 				vtris.push_back(vtri);
 				ntris.push_back(ntri);
-				uvtris.push_back(uvtri);
+				if(load_uv) uvtris.push_back(uvtri);
 			}
 		}
 

@@ -17,7 +17,8 @@ namespace io {
 							const int w, const int h, 
 							const std::vector<Vec4h>& image);
 	
-	const Model	load_obj(	const std::string& path);
+	const Model	load_obj(	const std::string& path,
+							const bool load_uv = true);
 }
 
 #endif
