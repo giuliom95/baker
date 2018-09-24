@@ -46,19 +46,20 @@ int main(int argc, char* argv[]) {
 		const auto ntri = model_low.ntris[t];
 		const auto uvtri = model_low.uvtris[t];
 
-		for(auto a = 0.0f; a <= 1.0f; a += .03) {
-			for(auto b = 0.0f; b <= 1.0f; b += .03) {
+		for(auto a = 0.0f; a <= 1.0f; a += .01) {
+			for(auto b = 0.0f; b <= 1.0f; b += .01) {
 				const auto c = 1 - a - b;
 				if(c < 0 || c > 1) continue;
 
-				const auto p = a*model_low.vtxs[vtri[0]] + b*model_low.vtxs[vtri[1]] + c*model_low.vtxs[vtri[2]];
 				const auto n = normalize(a*model_low.norms[ntri[0]] + b*model_low.norms[ntri[1]] + c*model_low.norms[ntri[2]]);
+				const auto p = a*model_low.vtxs[vtri[0]] + b*model_low.vtxs[vtri[1]] + c*model_low.vtxs[vtri[2]];
+				const auto o = p - 10*n;
 
 				RTCIntersectContext ray_context;
 				rtcInitIntersectContext(&ray_context);
 
 				RTCRayHit ray_hit;
-				ray_hit.ray.org_x = p[0]; ray_hit.ray.org_y = p[1]; ray_hit.ray.org_z = p[2];
+				ray_hit.ray.org_x = o[0]; ray_hit.ray.org_y = o[1]; ray_hit.ray.org_z = o[2];
 				ray_hit.ray.dir_x = n[0]; ray_hit.ray.dir_y = n[1]; ray_hit.ray.dir_z = n[2];
 				ray_hit.ray.tnear = 0.0f; ray_hit.ray.tfar = 100.0f; 
 				ray_hit.ray.flags = 0;
@@ -81,8 +82,8 @@ int main(int argc, char* argv[]) {
 					const int j = uv[1] * img_h;
 
 					auto& pix = img[i + j*img_w];
-					pix[0] += 0.5f * n_loc[2] + 0.5f;
-					pix[1] += 0.5f * n_loc[1] + 0.5f;
+					pix[0] += 0.5f * n_loc[1] + 0.5f;
+					pix[1] += 0.5f * n_loc[2] + 0.5f;
 					pix[2] += 0.5f * n_loc[0] + 0.5f;
 					pix[3] += 1;
 				}
@@ -92,10 +93,15 @@ int main(int argc, char* argv[]) {
 
 	for(auto pix_idx = 0; pix_idx < img_w*img_h; ++pix_idx) {
 		auto& pix = img[pix_idx];
-		if(pix[3] == 0) continue;
-		pix[0] /= pix[3];
-		pix[1] /= pix[3];
-		pix[2] /= pix[3];
+		if(pix[3] > 0) {
+			pix[0] /= pix[3];
+			pix[1] /= pix[3];
+			pix[2] /= pix[3];
+		} else {
+			pix[0] = 0.5f;
+			pix[1] = 0.5f;
+			pix[2] = 1.0f;
+		}
 		pix[3] = 1.0f;
 	}
 
