@@ -22,6 +22,7 @@ using Vec4h = std::array<half, 4>;
 
 inline const Vec2f operator*	(const float f,  const Vec2f& v) { return {f*v[0], f*v[1]}; }
 inline const Vec2f operator+	(const Vec2f& a, const Vec2f& b) { return {a[0]+b[0], a[1]+b[1]}; }
+inline const Vec2f operator-	(const Vec2f& a, const Vec2f& b) { return {a[0]-b[0], a[1]-b[1]}; }
 
 inline std::ostream& operator<<(std::ostream& os, const Vec2f& v) {
 	return os << "[" << v[0] << ", " << v[1] << "]";
@@ -94,6 +95,15 @@ inline const Mat4 transpose (const Mat4& m) {
 				m[1], m[5],  m[9], m[13],
 				m[2], m[6], m[10], m[14],
 				m[3], m[7], m[11], m[15]};
+}
+
+
+//////// TRIANGLE ////////
+
+inline const float triarea(const Vec2f p0, const Vec2f p1, const Vec2f p2) {
+	const auto v01 = p1 - p0;
+	const auto v02 = p2 - p0;
+	return 0.5 * (v01[0]*v02[1] - v01[1]*v02[0]);
 }
 
 

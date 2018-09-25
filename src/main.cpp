@@ -51,8 +51,11 @@ int main(int argc, char* argv[]) {
 				const auto c = 1 - a - b;
 				if(c < 0 || c > 1) continue;
 
+				const auto p0 = model_low.vtxs[vtri[0]];
+				const auto p1 = model_low.vtxs[vtri[1]];
+				const auto p2 = model_low.vtxs[vtri[2]];
+				const auto p = a*p0 + b*p1 + c*p2;
 				const auto n = normalize(a*model_low.norms[ntri[0]] + b*model_low.norms[ntri[1]] + c*model_low.norms[ntri[2]]);
-				const auto p = a*model_low.vtxs[vtri[0]] + b*model_low.vtxs[vtri[1]] + c*model_low.vtxs[vtri[2]];
 				const auto o = p - 10*n;
 
 				RTCIntersectContext ray_context;
@@ -69,22 +72,40 @@ int main(int argc, char* argv[]) {
 
 				if(ray_hit.hit.geomID == geom_id) {
 					
+					// UV coords on tri vertices
+					const auto uv0 = model_low.uvs[uvtri[0]];
+					const auto uv1 = model_low.uvs[uvtri[1]];
+					const auto uv2 = model_low.uvs[uvtri[2]];
+
+					const auto uv = a*uv0 + b*uv1 + c*uv2;
+					
+					const auto uv_tu = uv + Vec2f({0.01f, 0.0f});
+					const auto t_area = triarea(uv0, uv1, uv2);
+
+					const auto new_a = triarea(uv_tu,   uv1,   uv2) / t_area;
+					const auto new_b = triarea(  uv0, uv_tu,   uv2) / t_area;
+					const auto new_c = triarea(  uv0,   uv1, uv_tu) / t_area;
+					const auto p_tu = new_a*p0 + new_b*p1 + new_c*p2;
+					const auto tang_tu = p_tu - p;
+
+					const auto bitang = normalize(cross(n, tang_tu));
+					const auto tang = cross(bitang, n);
+
 					const auto t_hi = ray_hit.hit.primID;
 					const auto ntri_hi = model_hi.ntris[t_hi];
 					const auto n_hi = normalize(a*model_hi.norms[ntri_hi[0]] + b*model_hi.norms[ntri_hi[1]] + c*model_hi.norms[ntri_hi[2]]);
 
-					const auto mat = transpose(refFromVec(n));
-					const auto n_loc = transformVector(mat, n_hi);
+					const Mat4 mat{tang, bitang, n, Vec3f()};
 
-					const auto uv = a*model_low.uvs[uvtri[0]] + b*model_low.uvs[uvtri[1]] + c*model_low.uvs[uvtri[2]];
+					const auto n_loc = transformVector(transpose(mat), n_hi);
 					
 					const int i = uv[0] * img_w;
 					const int j = uv[1] * img_h;
 
 					auto& pix = img[i + j*img_w];
-					pix[0] += 0.5f * n_loc[1] + 0.5f;
-					pix[1] += 0.5f * n_loc[2] + 0.5f;
-					pix[2] += 0.5f * n_loc[0] + 0.5f;
+					pix[0] += 0.5f * n_loc[0] + 0.5f;
+					pix[1] += 0.5f * n_loc[1] + 0.5f;
+					pix[2] += 0.5f * n_loc[2] + 0.5f;
 					pix[3] += 1;
 				}
 			}	
