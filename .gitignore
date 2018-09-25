@@ -1,3 +1,8 @@
 .vscode
 bin
 in
+out
+*.exr
+*.obj
+*.fbx
+*.png
