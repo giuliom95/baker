@@ -46,8 +46,8 @@ int main(int argc, char* argv[]) {
 		const auto ntri = model_low.ntris[t];
 		const auto uvtri = model_low.uvtris[t];
 
-		for(auto a = 0.0f; a <= 1.0f; a += .01) {
-			for(auto b = 0.0f; b <= 1.0f; b += .01) {
+		for(auto a = -0.01f; a <= 1.01f; a += .003) {
+			for(auto b = -0.01f; b <= 1.01f; b += .003) {
 				const auto c = 1 - a - b;
 				if(c < 0 || c > 1) continue;
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 					const auto n_loc = transformVector(transpose(mat), n_hi);
 					
 					const int i = uv[0] * img_w;
-					const int j = uv[1] * img_h;
+					const int j = (1 - uv[1]) * img_h;
 
 					auto& pix = img[i + j*img_w];
 					pix[0] += 0.5f * n_loc[0] + 0.5f;
