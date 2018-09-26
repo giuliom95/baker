@@ -8,6 +8,18 @@
 
 #include "io.hpp"
 
+const Vec3f inters_normal(const Model& model, const RTCRayHit& rh) {
+	const auto t_hi = rh.hit.primID;
+	const auto ntri_hi = model.ntris[t_hi];
+	const auto tria_hi = rh.hit.u;
+	const auto trib_hi = rh.hit.v;
+	const auto tric_hi = 1 - tria_hi - trib_hi;
+	return normalize(	tric_hi*model.norms[ntri_hi[0]] + 
+						tria_hi*model.norms[ntri_hi[1]] + 
+						trib_hi*model.norms[ntri_hi[2]]);
+}
+
+
 int main(int argc, char* argv[]) {
 	// Activation of "Flush to Zero" and "Denormals are Zero" CPU modes.
 	// Embree reccomends them in sake of performance.
@@ -21,26 +33,24 @@ int main(int argc, char* argv[]) {
 	const auto embree_device	= rtcNewDevice("verbose=3");
 	const auto embree_scene		= rtcNewScene(embree_device);
 
-	/** Start building scene **/
-	const auto model_low = io::load_obj("in/dino_low.obj");
-	const auto model_hi = io::load_obj("in/dino_hi.obj", false);
-
+	const auto model_low = io::load_obj("in/bunny_low.obj");
+	
+	// Start building Embree scene
+	const auto model_hi = io::load_obj("in/bunny_hi.obj", false);
 	const auto embree_geom = rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_TRIANGLE);
 	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, model_hi.vtxs.data(), 0, sizeof(Vec3f), model_hi.vtxs.size());
 	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, model_hi.vtris.data(), 0, sizeof(Vec3i), model_hi.vtris.size());
 	rtcCommitGeometry(embree_geom);
 	const auto geom_id = rtcAttachGeometry(embree_scene, embree_geom);
 	rtcReleaseGeometry(embree_geom);
-
 	rtcCommitScene(embree_scene);
-	/** End building scene **/
 
-	/** Start scene intersection **/
-
+	// Create texture buffer
 	const auto img_w = 2048;
 	const auto img_h = 2048;
 	std::vector<Vec4h> img(img_w*img_h, {0.f,0.f,0.f,0.f});
 
+	// This data structere is needed by embree. It is never read in this code.
 	RTCIntersectContext ray_context;
 	rtcInitIntersectContext(&ray_context);
 
@@ -52,6 +62,8 @@ int main(int argc, char* argv[]) {
 		for(auto a = -0.01f; a <= 1.01f; a += .01) {
 			for(auto b = -0.01f; b <= 1.01f; b += .01) {
 				const auto c = 1 - a - b;
+
+				// Discard samples which are out of triangle convex combination
 				if(c < 0 || c > 1) continue;
 
 				// If the ray direction has been already flipped
@@ -62,17 +74,19 @@ int main(int argc, char* argv[]) {
 				const auto p2 = model_low.vtxs[vtri[2]];
 				const auto p = a*p0 + b*p1 + c*p2;
 				const auto n = normalize(a*model_low.norms[ntri[0]] + b*model_low.norms[ntri[1]] + c*model_low.norms[ntri[2]]);
-				const auto o = p;// - 10*n;
 
+				// These params won't change later
 				RTCRayHit ray_hit;
-				ray_hit.ray.org_x = o[0]; ray_hit.ray.org_y = o[1]; ray_hit.ray.org_z = o[2];
+				ray_hit.ray.org_x = p[0]; ray_hit.ray.org_y = p[1]; ray_hit.ray.org_z = p[2];
+				ray_hit.ray.flags = 0;
+
 				ray_hit.ray.dir_x = n[0]; ray_hit.ray.dir_y = n[1]; ray_hit.ray.dir_z = n[2];
 				ray_hit.ray.tnear = 0.0f; ray_hit.ray.tfar = 100.0f; 
-				ray_hit.ray.flags = 0;
 				ray_hit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
 				ray_hit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 				rtcIntersect1(embree_scene, &ray_context, &ray_hit);
 
+				// If no intersection shooting outward the low mesh try inwards
 				if(ray_hit.hit.geomID == RTC_INVALID_GEOMETRY_ID) {
 					ray_hit.ray.dir_x = -n[0]; ray_hit.ray.dir_y = -n[1]; ray_hit.ray.dir_z = -n[2];
 					ray_hit.ray.tnear = 0.0f; ray_hit.ray.tfar = 100.0f; 
@@ -83,20 +97,17 @@ int main(int argc, char* argv[]) {
 				}
 
 				// Get hi model normal
-				auto t_hi = ray_hit.hit.primID;
-				auto ntri_hi = model_hi.ntris[t_hi];
-				auto n_hi = normalize(a*model_hi.norms[ntri_hi[0]] + b*model_hi.norms[ntri_hi[1]] + c*model_hi.norms[ntri_hi[2]]);
+				auto n_hi = inters_normal(model_hi, ray_hit);
 
-				if(dot(n_hi, n) < 0) {
+				if(dot(n_hi, n) < 0 && !flipped) {
 					ray_hit.ray.dir_x = -n[0]; ray_hit.ray.dir_y = -n[1]; ray_hit.ray.dir_z = -n[2];
 					ray_hit.ray.tnear = 0.0f; ray_hit.ray.tfar = 100.0f; 
 					ray_hit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
 					ray_hit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 					rtcIntersect1(embree_scene, &ray_context, &ray_hit);
 
-					t_hi = ray_hit.hit.primID;
-					ntri_hi = model_hi.ntris[t_hi];
-					n_hi = normalize(a*model_hi.norms[ntri_hi[0]] + b*model_hi.norms[ntri_hi[1]] + c*model_hi.norms[ntri_hi[2]]);
+					// Compute normal again
+					n_hi = inters_normal(model_hi, ray_hit);
 				}
 
 				// UV coords on tri vertices
