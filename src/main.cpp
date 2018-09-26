@@ -8,6 +8,7 @@
 
 #include "io.hpp"
 
+// Given a model and an Embree ray hit compute the normal on the given model on the hit point
 const Vec3f inters_normal(const Model& model, const RTCRayHit& rh) {
 	const auto t_hi = rh.hit.primID;
 	const auto ntri_hi = model.ntris[t_hi];
@@ -106,7 +107,7 @@ int main(int argc, char* argv[]) {
 					ray_hit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 					rtcIntersect1(embree_scene, &ray_context, &ray_hit);
 
-					// Compute normal again
+					// Compute normal again after new hit
 					n_hi = inters_normal(model_hi, ray_hit);
 				}
 
@@ -117,26 +118,29 @@ int main(int argc, char* argv[]) {
 
 				const auto uv = a*uv0 + b*uv1 + c*uv2;
 				
+				// Move uv coords slightly on the right
 				const auto uv_tu = uv + Vec2f({0.01f, 0.0f});
+				// Compute barycentric coords for new uv_tu
 				const auto t_area = triarea(uv0, uv1, uv2);
-
 				const auto new_a = triarea(uv_tu,   uv1,   uv2) / t_area;
 				const auto new_b = triarea(  uv0, uv_tu,   uv2) / t_area;
 				const auto new_c = triarea(  uv0,   uv1, uv_tu) / t_area;
+				// Get world space point mapped to uv_tu 
 				const auto p_tu = new_a*p0 + new_b*p1 + new_c*p2;
 				const auto tang_tu = p_tu - p;
-
+				// Build tangent space to world space reference frame
 				const auto bitang = normalize(cross(n, tang_tu));
 				const auto tang = cross(bitang, n);
-
-
 				const Mat4 mat{tang, bitang, n, Vec3f()};
 
+				// Hi poly normal into tangent space of low poly model
 				const auto n_loc = transformVector(transpose(mat), n_hi);
 				
+				// Texel coords
 				const int i = uv[0] * img_w;
 				const int j = (1 - uv[1]) * img_h;
 
+				// Accomulate normal on the texel
 				auto& pix = img[i + j*img_w];
 				pix[0] += n_loc[0];
 				pix[1] += n_loc[1];
@@ -149,7 +153,9 @@ int main(int argc, char* argv[]) {
 	for(auto pix_idx = 0; pix_idx < img_w*img_h; ++pix_idx) {
 		auto& pix = img[pix_idx];
 		if(pix[3] > 0) {
+			// Average the accomulated computed normals
 			const auto n = normalize((1/pix[3]) * Vec3f({pix[0], pix[1], pix[2]}));
+			// Scale and translate color space to map -1->0, 0->.5, +1->1
 			pix[0] = 0.5f * n[0] + 0.5f;
 			pix[1] = 0.5f * n[1] + 0.5f;
 			pix[2] = 0.5f * n[2] + 0.5f;
@@ -162,8 +168,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	io::save_exr("./test.exr", img_w, img_h, img);
-	/** End scene intersection **/
-
 	
 	rtcReleaseScene(embree_scene);
 	rtcReleaseDevice(embree_device);
