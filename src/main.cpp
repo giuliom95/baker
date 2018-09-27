@@ -31,13 +31,15 @@ int main(int argc, char* argv[]) {
 		_MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 	#endif // __INTELLISENSE__
 
+	const auto cmd_args = io::parse_cmd_args(argc, argv);
+
 	const auto embree_device	= rtcNewDevice("verbose=3");
 	const auto embree_scene		= rtcNewScene(embree_device);
 
-	const auto model_low = io::load_obj("in/bunny_low.obj");
+	const auto model_low = io::load_obj(cmd_args.model_low_path);
 	
 	// Start building Embree scene
-	const auto model_hi = io::load_obj("in/bunny_hi.obj", false);
+	const auto model_hi = io::load_obj(cmd_args.model_hi_path, false);
 	const auto embree_geom = rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_TRIANGLE);
 	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, model_hi.vtxs.data(), 0, sizeof(Vec3f), model_hi.vtxs.size());
 	rtcSetSharedGeometryBuffer(embree_geom, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, model_hi.vtris.data(), 0, sizeof(Vec3i), model_hi.vtris.size());
@@ -167,7 +169,7 @@ int main(int argc, char* argv[]) {
 		pix[3] = 1.0f;
 	}
 
-	io::save_exr("./test.exr", img_w, img_h, img);
+	io::save_exr(cmd_args.texture_path, img_w, img_h, img);
 	
 	rtcReleaseScene(embree_scene);
 	rtcReleaseDevice(embree_device);

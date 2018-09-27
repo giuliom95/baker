@@ -66,4 +66,12 @@ namespace io {
 		return {vtxs, norms, uvs, vtris, ntris, uvtris};
 	}
 
+
+	const CmdArgs parse_cmd_args(int argc, char* argv[]) {
+		CmdArgs args{};
+		args.model_low_path = "in/bunny_low.obj";
+		args.model_hi_path = "in/bunny_hi.obj";
+		args.texture_path = "out/bunny.exr";
+		return args;
+	}
 }
