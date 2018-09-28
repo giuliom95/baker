@@ -13,6 +13,8 @@
 #include "model.hpp"
 
 namespace io {
+	static const std::string usage_msg = "Usage: baker <input low poly> <input hi poly> <output texture>";
+	
 	class CmdArgs {
 	public:
 		std::string model_low_path;

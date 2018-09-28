@@ -69,9 +69,14 @@ namespace io {
 
 	const CmdArgs parse_cmd_args(int argc, char* argv[]) {
 		CmdArgs args{};
-		args.model_low_path = "in/bunny_low.obj";
-		args.model_hi_path = "in/bunny_hi.obj";
-		args.texture_path = "out/bunny.exr";
+		if(argc != 4) {
+			std::cerr << "ERROR: Wrong number of arguments! " << std::endl;
+			std::cerr << "  " << io::usage_msg << std::endl;
+			throw std::invalid_argument("Wrong number of arguments!");
+		}
+		args.model_low_path = argv[1];
+		args.model_hi_path = argv[2];
+		args.texture_path = argv[3];
 		return args;
 	}
 }

@@ -31,7 +31,12 @@ int main(int argc, char* argv[]) {
 		_MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 	#endif // __INTELLISENSE__
 
-	const auto cmd_args = io::parse_cmd_args(argc, argv);
+	io::CmdArgs cmd_args;
+	try {
+		cmd_args = io::parse_cmd_args(argc, argv);
+	} catch (std::invalid_argument e) {
+		return -1;
+	}
 
 	const auto embree_device	= rtcNewDevice("verbose=3");
 	const auto embree_scene		= rtcNewScene(embree_device);
